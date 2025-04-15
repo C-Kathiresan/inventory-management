@@ -1,0 +1,64 @@
+name: CI/CD - Inventory Management App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    # Step 1: Checkout the code
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Step 2: Setup .NET SDK (for backend)
+    - name: Set up .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x' # Make sure to use the correct .NET version for your app
+
+    # Step 3: Restore .NET dependencies
+    - name: Restore .NET dependencies
+      run: dotnet restore ./InventoryManagement.sln
+
+    # Step 4: Build the .NET solution
+    - name: Build .NET solution
+      run: dotnet build ./InventoryManagement.sln --configuration Release --no-restore
+
+    # Step 5: Run Unit Tests
+    - name: Run Unit Tests
+      run: dotnet test ./InventoryManagement.sln --configuration Release --no-build
+
+    # Step 6: Set up Node.js (for Angular frontend)
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    # Step 7: Install Angular CLI globally
+    - name: Install Angular CLI
+      run: npm install -g @angular/cli
+
+    # Step 8: Install Angular dependencies
+    - name: Install Angular dependencies
+      run: npm install
+      working-directory: ./InventoryManagement.UI
+
+    # Step 9: Build Angular app (production build)
+    - name: Build Angular app
+      run: ng build --configuration production
+      working-directory: ./InventoryManagement.UI
+
+    # (Optional) Step 10: Deploy to Azure or IIS (optional, based on where you want to deploy)
+    # Example for Azure App Service deployment (uncomment if using Azure)
+
+    # - name: Deploy to Azure Web App
+    #   uses: Azure/webapps-deploy@v2
+    #   with:
+    #     app-name: YOUR_AZURE_APP_NAME
+    #     publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
+    #     package: ./InventoryManagement.UI/dist
